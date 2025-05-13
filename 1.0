@@ -1,0 +1,98 @@
+// Definições dos pinos
+#define IN1 5  // Motor A - Controle de direção
+#define IN2 6  // Motor A - Controle de direção
+#define IN3 9  // Motor B - Controle de direção
+#define IN4 10 // Motor B - Controle de direção
+#define TRIG_PIN 3  // Pino TRIG do sensor ultrassônico
+#define ECHO_PIN 2  // Pino ECHO do sensor ultrassônico
+
+long duracao;
+int distancia;
+int velocidade = 150;  // Valor de velocidade para os motores (0-255)
+int gir_dir = 0;
+int gir_esq = 0;
+
+void setup() {
+  // Inicializa o Monitor Serial
+  Serial.begin(9600);
+  
+  // Configura os pinos da ponte H como saída
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  
+  // Configura os pinos do sensor ultrassônico
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+}
+
+float getDistance() {
+  // Envia pulso ao sensor
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+  
+  // Lê o tempo de retorno do eco
+  duracao = pulseIn(ECHO_PIN, HIGH, 30000); // 30ms de timeout
+  // Calcula a distância em centímetros (velocidade do som = 0.034 cm/µs)
+  distancia = (duracao * 0.034) / 2;
+  
+  return distancia;
+}
+void frente(){
+  analogWrite(IN1, velocidade);
+  analogWrite(IN2, 0);
+  analogWrite(IN3, velocidade);
+  analogWrite(IN4, 0);
+}
+void parar(){
+  analogWrite(IN1, 0);
+  analogWrite(IN2, 0);
+  analogWrite(IN3, 0);
+  analogWrite(IN4, 0);
+  delay(500);
+  direita();
+  if(distancia < 10){
+    gir_dir = 1;
+  }else{
+    gir_dir = 0;
+  }
+  
+}
+void direita(){
+  analogWrite(IN1, velocidade);
+  analogWrite(IN2, 0);
+  analogWrite(IN3, 0);
+  analogWrite(IN4, velocidade);
+  delay(250);
+}
+void esquerda(){
+  analogWrite(IN1, 0);
+  analogWrite(IN2, velocidade);
+  analogWrite(IN3, velocidade);
+  analogWrite(IN4, 0);
+  delay(250);
+}
+
+void loop() {
+  // Lê a distância do sensor
+  distancia = getDistance();
+  
+  // Imprime a distância no Monitor Serial
+  Serial.print("Distancia: ");
+  Serial.print(distancia);
+  Serial.println(" cm");
+
+  if (distancia > 10) {
+    frente();
+  } else {
+    if (gir_dir == 0) 
+    parar();
+    esquerda();
+    delay(500);
+  }
+  delay(10);
+}
