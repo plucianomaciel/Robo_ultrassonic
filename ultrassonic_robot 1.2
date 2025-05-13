@@ -45,6 +45,8 @@ void re() {
   analogWrite(IN2, velocidade);
   analogWrite(IN3, 0);
   analogWrite(IN4, velocidade);
+  delay(200); // Ré por 200 ms
+  parar();
 }
 
 void parar() {
@@ -60,7 +62,7 @@ void direita() {
   analogWrite(IN2, 0);
   analogWrite(IN3, 0);
   analogWrite(IN4, velocidade);
-  delay(320); // Giro de 90°
+  delay(320); // Giro de 90° (ajustado para o robô)
   parar();
 }
 
@@ -69,7 +71,7 @@ void esquerda() {
   analogWrite(IN2, velocidade);
   analogWrite(IN3, velocidade);
   analogWrite(IN4, 0);
-  delay(300); // Giro de 90°
+  delay(300); // Giro de 90° (ajustado para o robô)
   parar();
 }
 
@@ -78,7 +80,7 @@ void esquerda_180() {
   analogWrite(IN2, velocidade);
   analogWrite(IN3, velocidade);
   analogWrite(IN4, 0);
-  delay(600); // Giro de 180°
+  delay(600); // Giro de 180° (ajustado para o robô)
   parar();
 }
 
@@ -88,14 +90,10 @@ void loop() {
   Serial.print(distancia);
   Serial.println(" cm");
 
-  if(distancia <9){
-    re();
-    delay(200);
-  }
-
-  if (distancia > 10) {
-    frente();
-  } else {
+  if (distancia <= 10) {
+    if (distancia < 9) {
+      re(); // Dar ré se muito perto
+    }
     // Parar e verificar direções
     parar();
     
@@ -106,7 +104,7 @@ void loop() {
     Serial.print(dist_dir);
     Serial.println(" cm");
     
-    // Girar 180° à esquerda (partindo da direita)
+    // Girar 180° à esquerda (para a esquerda, -90°)
     esquerda_180();
     dist_esq = getDistance();
     Serial.print("Distancia Esquerda: ");
@@ -115,11 +113,9 @@ void loop() {
     
     // Comparar e decidir
     if (dist_dir > dist_esq) {
-      direita(); // Gira 90° à direita
-    } else {
-      esquerda(); // Gira 90° à esquerda
-    }
-    frente(); // Segue em frente
+      esquerda_180(); // Volta à posição de dist_dir (90° à direita)
+    } // Se dist_esq for maior, já está na posição correta (-90°)
   }
+  frente(); // Segue em frente
   delay(10);
 }
